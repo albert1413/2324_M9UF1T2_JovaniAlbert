@@ -57,7 +57,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $operacio = $resultat;
         }
 
-        if (!empty($resultat) && $resultat !== 'Error: Operació no vàlida!' && $resultat !== 'Error: Divisió per zero!') {
+        // Guardar el resultado incluso si es 0
+        if ($resultat !== 'Error: Operació no vàlida!' && $resultat !== 'Error: Divisió per zero!') {
             if (!isset($_SESSION['historial'])) {
                 $_SESSION['historial'] = [];
             }
@@ -211,17 +212,19 @@ if (isset($_POST['logout'])) {
     <div class="row mt-4">
         <div class="col-12">
             <h3 class="text-center">Historial de Operacions</h3>
-            <ul class="list-group">
+                <ul>
                 <?php
-                if (isset($_SESSION['historial'])) {
-                    foreach ($_SESSION['historial'] as $operacio) {
-                        echo "<li class='list-group-item'>$operacio</li>";
+                if (isset($_SESSION['historial']) && count($_SESSION['historial']) > 0) {
+                    // Invertir el orden del historial para mostrar las operaciones más recientes primero
+                    $historial_invertido = array_reverse($_SESSION['historial']);
+                    foreach ($historial_invertido as $operacio) {
+                        echo "<li>$operacio</li>";
                     }
                 } else {
-                    echo "<li class='list-group-item'>No hi ha operacions enregistrades.</li>";
+                    echo "<li>No hi ha operacions enregistrades.</li>";
                 }
                 ?>
-            </ul>
+</ul>
         </div>
     </div>
 
