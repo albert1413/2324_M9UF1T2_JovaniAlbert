@@ -130,18 +130,7 @@ if (isset($_POST['logout'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Calculadora Mòbil</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            font-size: 18px;
-        }
-        .btn {
-            font-size: 24px;
-            padding: 15px;
-        }
-        .form-control {
-            font-size: 24px;
-        }
-    </style>
+
 </head>
 <body>
 
@@ -209,6 +198,14 @@ if (isset($_POST['logout'])) {
             </form>
         </div>
     </div>
+    <!-- Botón para cerrar sesión -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <form method="post">
+                <button type="submit" name="logout" class="btn btn-danger w-100">Tancar sessió</button>
+            </form>
+        </div>
+    </div>
 
     <!-- Historial de operaciones -->
     <div class="row mt-4">
@@ -228,14 +225,7 @@ if (isset($_POST['logout'])) {
         </div>
     </div>
 
-    <!-- Botón para cerrar sesión -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <form method="post">
-                <button type="submit" name="logout" class="btn btn-danger w-100">Tancar sessió</button>
-            </form>
-        </div>
-    </div>
+    
 </div>
 
 <script>
