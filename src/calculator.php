@@ -55,6 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['historial'] = [];
         }
         $_SESSION['historial'][] = "$input = $resultat";
+        $_SESSION['ultimo_resultado'] = $resultat;
     }
 
     if (isset($_POST['string1'])) {
@@ -65,6 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $resultatString = operarString($string1, $string2, $operador);
 
         $_SESSION['historial'][] = "$string1 $operador $string2 = $resultatString";
+        $_SESSION['ultimo_resultado'] = $resultatString;
     }
 
     if (isset($_POST['logout'])) {
