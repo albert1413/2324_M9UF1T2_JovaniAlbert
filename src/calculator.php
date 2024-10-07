@@ -45,6 +45,7 @@ function operarString($string1, $string2, $operador) {
     }
 }
 
+// Manejo de solicitudes POST
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['inputField'])) {
         $input = $_POST['inputField'];
