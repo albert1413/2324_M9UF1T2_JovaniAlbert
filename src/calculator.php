@@ -1,78 +1,137 @@
-<?php
-session_start();
+<?php 
+session_start(); // Inicia la sessió per a emmagatzemar l'historial d'operacions
 
-// Función para manejar las operaciones numéricas
-function calcular($input) {
-    if (preg_match('/^[0-9\+\-\*\/\.\!]+$/', $input)) {
-        try {
-            if (strpos($input, '!') !== false) {
-                $input = rtrim($input, '!');
-                return factorial(intval($input));
-            } else {
-                return eval("return $input;");
-            }
-        } catch (Exception $e) {
-            return "Error";
-        }
-    } else {
-        return "Input inválido";
-    }
+// Si la sol·licitud és de tipus GET (carregar o actualitzar la pàgina), es tanca la sessió
+if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+    session_unset(); // Esborra totes les variables de sessió
+    session_destroy(); // Destrueix la sessió
 }
 
-// Función para calcular el factorial
-function factorial($num) {
-    if ($num < 0) {
-        return "Error: número negativo";
-    } elseif ($num == 0 || $num == 1) {
-        return 1;
-    } else {
-        $factorial = 1;
-        for ($i = $num; $i >= 2; $i--) {
-            $factorial *= $i;
-        }
-        return $factorial;
-    }
-}
+// Definir una constant per configurar el mètode del factorial (iteratiu o recursiu)
+define('FACTORIAL_METHOD', 'iterative'); // Pots triar 'iterative' o 'recursive'
 
-// Función para manejar las operaciones con strings
-function operarString($string1, $string2, $operador) {
-    if ($operador == 'concat') {
-        return $string1 . $string2;
-    } elseif ($operador == 'remove') {
-        return str_replace($string2, '', $string1);
-    } else {
-        return "Operador no válido";
-    }
-}
-
-// Manejo de solicitudes POST
+// Comprova si el formulari ha estat enviat
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Operacions numèriques
     if (isset($_POST['inputField'])) {
-        $input = $_POST['inputField'];
-        $resultat = calcular($input);
+        $inputField = isset($_POST['inputField']) ? $_POST['inputField'] : '';
+        $resultat = '';
 
-        if (!isset($_SESSION['historial'])) {
-            $_SESSION['historial'] = [];
+        // Comprovem la sintaxi de l'input
+        if (preg_match('/^(\d+(\.\d+)?)([\+\-\*\/])(\d+(\.\d+)?)$/', $inputField, $matches)) {
+            $num1 = (float)$matches[1];
+            $operador = $matches[3];
+            $num2 = (float)$matches[4];
+
+            switch ($operador) {
+                case '+':
+                    $resultat = $num1 + $num2;
+                    $operacio = "$num1 + $num2 = $resultat";
+                    break;
+                case '-':
+                    $resultat = $num1 - $num2;
+                    $operacio = "$num1 - $num2 = $resultat";
+                    break;
+                case '*':
+                    $resultat = $num1 * $num2;
+                    $operacio = "$num1 * $num2 = $resultat";
+                    break;
+                case '/':
+                    if ($num2 != 0) {
+                        $resultat = $num1 / $num2;
+                        $operacio = "$num1 / $num2 = $resultat";
+                    } else {
+                        $resultat = 'Error: Divisió per zero!';
+                        $operacio = $resultat;
+                    }
+                    break;
+            }
+        } elseif (preg_match('/^(\d+)(!?)$/', $inputField, $matches)) {
+            $num1 = (int)$matches[1];
+            $operacio = "Factorial($num1)";
+            if ($matches[2] === '!') {
+                if (FACTORIAL_METHOD === 'iterative') {
+                    $resultat = factorial_iterative($num1);
+                } else {
+                    $resultat = factorial_recursive($num1);
+                }
+                $operacio .= " = $resultat";
+            }
+        } else {
+            $resultat = 'Error: Operació no vàlida!';
+            $operacio = $resultat;
         }
-        $_SESSION['historial'][] = "$input = $resultat";
-        $_SESSION['ultimo_resultado'] = $resultat;
+
+        // Guarda l'operació a l'historial de la sessió només si hi ha un resultat vàlid
+        if (!empty($resultat) && $resultat !== 'Error: Operació no vàlida!' && $resultat !== 'Error: Divisió per zero!') {
+            if (!isset($_SESSION['historial'])) {
+                $_SESSION['historial'] = [];
+            }
+            $_SESSION['historial'][] = $operacio;
+        }
+
+        // Mostra el resultat
+        echo "<h2>Resultat: $resultat</h2>";
     }
 
+    // Operacions amb strings
     if (isset($_POST['string1'])) {
         $string1 = $_POST['string1'];
         $string2 = isset($_POST['string2']) ? $_POST['string2'] : '';
         $operador = $_POST['operador'];
+        $resultatString = '';
 
-        $resultatString = operarString($string1, $string2, $operador);
+        switch ($operador) {
+            case 'concat':
+                $resultatString = $string1 . $string2;
+                $operacioString = "$string1 . $string2 = $resultatString";
+                break;
+            case 'remove':
+                $resultatString = str_replace($string2, '', $string1);
+                $operacioString = "Eliminar '$string2' de '$string1' = $resultatString";
+                break;
+        }
 
-        $_SESSION['historial'][] = "$string1 $operador $string2 = $resultatString";
-        $_SESSION['ultimo_resultado'] = $resultatString;
+        // Guarda l'operació de strings a l'historial
+        if (!empty($resultatString)) {
+            if (!isset($_SESSION['historial'])) {
+                $_SESSION['historial'] = [];
+            }
+            $_SESSION['historial'][] = $operacioString;
+        }
+
+        // Mostra el resultat
+        echo "<h2>Resultat: $resultatString</h2>";
     }
+}
 
-    if (isset($_POST['logout'])) {
-        session_destroy();
-        header("Location: " . $_SERVER['PHP_SELF']);
-        exit;
+// Funció per calcular el factorial de manera recursiva
+function factorial_recursive($n) {
+    if ($n < 0) {
+        return 'Error: El factorial no està definit per nombres negatius.';
+    } elseif ($n == 0) {
+        return 1;
+    } else {
+        return $n * factorial_recursive($n - 1);
     }
+}
+
+// Funció per calcular el factorial de manera iterativa
+function factorial_iterative($n) {
+    if ($n < 0) {
+        return 'Error: El factorial no està definit per nombres negatius.';
+    }
+    $factorial = 1;
+    for ($i = 1; $i <= $n; $i++) {
+        $factorial *= $i;
+    }
+    return $factorial;
+}
+
+// Comprova si l'usuari vol tancar la sessió
+if (isset($_POST['logout'])) {
+    session_unset(); // Esborra totes les variables de sessió
+    session_destroy(); // Destrueix la sessió
+    echo "<h2>Has tancat la sessió. L'historial s'ha esborrat.</h2>";
 }
 ?>
